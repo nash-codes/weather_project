@@ -1,4 +1,4 @@
-name: Postman Tests
+name: Postman Weather API Tests
 
 on:
   push:
@@ -17,3 +17,6 @@ jobs:
 
       - name: Run Postman Tests
         run: newman run Postman_Weather_Collection.json -e Postman_Weather_Environment.json
+        
+      - name: Run Postman Tests with Reports
+        run: newman run Postman_Weather_Collection.json -e Postman_Weather_Environment.json --reporters cli,junit --reporter-junit-export results.xml
