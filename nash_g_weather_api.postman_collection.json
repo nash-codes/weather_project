@@ -1,0 +1,202 @@
+{
+	"info": {
+		"_postman_id": "cba31690-1a3a-4f74-9a74-6284c5c2cc28",
+		"name": "Weather API Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33438389"
+	},
+	"item": [
+		{
+			"name": "Get San Francisco Weather",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var responseData = pm.response.json();",
+							"var tempCelsius = responseData.current_weather.temperature;",
+							"",
+							"var tempFahrenheit = (tempCelsius * 9/5) + 32;",
+							"",
+							"pm.environment.set('sf_temperature', tempFahrenheit);",
+							"",
+							"pm.test('Temperature is in a valid range', function () {",
+							"    pm.expect(tempFahrenheit).to.be.within(-50, 130);",
+							"});",
+							"",
+							"pm.test('Response time is acceptable', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}?latitude={{latitude_sf}}&longitude={{longitude_sf}}&current_weather=true",
+					"host": [
+						"{{base_url}}"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "{{latitude_sf}}"
+						},
+						{
+							"key": "longitude",
+							"value": "{{longitude_sf}}"
+						},
+						{
+							"key": "current_weather",
+							"value": "true"
+						},
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Next City Weather",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var temp = pm.environment.get('sf_temperature');",
+							"",
+							"var selectedCity = '';",
+							"var cityTemperature = 0;",
+							"var cityWindSpeed = 0;",
+							"var cityWindDirection = 0;",
+							"var cityWeatherDescription = '';",
+							"",
+							"if (parseFloat(temp) > 60) {",
+							"    pm.environment.set('conditional_url', pm.environment.get('base_url') + ",
+							"        '?latitude=' + pm.environment.get('latitude_blr') + ",
+							"        '&longitude=' + pm.environment.get('longitude_blr') + ",
+							"        '&current_weather=true');",
+							"    console.log(\"Temperature is above 60°F. Fetching Bangalore Weather.\");",
+							"    selectedCity = 'Bangalore';",
+							"} else {",
+							"    pm.environment.set('conditional_url', pm.environment.get('base_url') + ",
+							"        '?latitude=' + pm.environment.get('latitude_ldn') + ",
+							"        '&longitude=' + pm.environment.get('longitude_ldn') + ",
+							"        '&current_weather=true');",
+							"    console.log(\"Temperature is below 60°F. Fetching London Weather.\");",
+							"    selectedCity = 'London';",
+							"}",
+							"",
+							"console.log(`Selected City: ${selectedCity}`);",
+							"",
+							"function getWeatherDescription(code) {",
+							"    const weatherCodes = {",
+							"        0: \"Clear sky\",",
+							"        1: \"Mainly clear\",",
+							"        2: \"Partly cloudy\",",
+							"        3: \"Overcast\",",
+							"        45: \"Fog\",",
+							"        48: \"Depositing rime fog\",",
+							"        51: \"Drizzle: Light\",",
+							"        53: \"Drizzle: Moderate\",",
+							"        55: \"Drizzle: Dense\",",
+							"        56: \"Freezing Drizzle: Light\",",
+							"        57: \"Freezing Drizzle: Dense\",",
+							"        61: \"Rain: Slight\",",
+							"        63: \"Rain: Moderate\",",
+							"        65: \"Rain: Heavy\",",
+							"        66: \"Freezing Rain: Light\",",
+							"        67: \"Freezing Rain: Heavy\",",
+							"        71: \"Snowfall: Slight\",",
+							"        73: \"Snowfall: Moderate\",",
+							"        75: \"Snowfall: Heavy\",",
+							"        77: \"Snow Grains\",",
+							"        80: \"Rain showers: Slight\",",
+							"        81: \"Rain showers: Moderate\",",
+							"        82: \"Rain showers: Violent\",",
+							"        85: \"Snow showers: Slight\",",
+							"        86: \"Snow showers: Heavy\",",
+							"        95: \"Thunderstorm: Slight/Moderate\",",
+							"        96: \"Thunderstorm with Slight Hail\",",
+							"        99: \"Thunderstorm with Heavy Hail\"",
+							"    };",
+							"    return weatherCodes[code] || \"Unknown weather condition\";",
+							"}",
+							"",
+							"pm.test(\"Verify selected city's weather details are logged\", function () {",
+							"    var responseData = pm.response.json();",
+							"    var cityTemperatureCelsius = responseData.current_weather.temperature;",
+							"    var cityWindSpeedKmh = responseData.current_weather.windspeed;",
+							"    var cityWindDirectionDeg = responseData.current_weather.winddirection;",
+							"    var cityWeatherCode = responseData.current_weather.weathercode;",
+							"",
+							"    cityTemperature = (cityTemperatureCelsius * 9/5) + 32;",
+							"    cityWindSpeed = cityWindSpeedKmh * 0.621371;",
+							"    cityWindDirection = cityWindDirectionDeg;",
+							"    cityWeatherDescription = getWeatherDescription(cityWeatherCode);",
+							"",
+							"    console.log(`${selectedCity} Temperature: ${cityTemperature.toFixed(2)}°F`);",
+							"    console.log(`${selectedCity} Wind Speed: ${cityWindSpeed.toFixed(2)} mph`);",
+							"    console.log(`${selectedCity} Wind Direction: ${cityWindDirection}°`);",
+							"    console.log(`${selectedCity} Weather Condition: ${cityWeatherDescription}`);",
+							"});",
+							"",
+							"pm.test('Response time is acceptable', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var temp = pm.environment.get('sf_temperature');",
+							"",
+							"if (temp === null || temp === undefined || temp === \"\") {",
+							"    console.log(\"Error: sf_temperature is not set correctly.\");",
+							"} else {",
+							"    console.log(`San Francisco Temperature: ${temp}°F`);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{conditional_url}}",
+					"host": [
+						"{{conditional_url}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
